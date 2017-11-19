@@ -22,10 +22,10 @@ fun main(args: Array<String>) {
     println(bmUnpacked.block)
     println(bl)
 
-//    val client = Client()
-//
-//    client.sendCoinsTo(1002, "ivan")
-//    client.mine()
+    val client = Client()
+
+    client.sendCoinsTo(1002, "ivan")
+    client.mine()
 
         // Blockchain test.
 

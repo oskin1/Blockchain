@@ -9,7 +9,7 @@ import blockchain.models.Block
 import blockchain.models.Transaction
 import network.message.*
 
-class Node(private val udpPort: Int = NodeSettings.defaultUdpPort): BlockchainDelegate {
+class Node(private val udpPort: Int = NodeSettings.defaultUdpPort) : BlockchainDelegate {
     private lateinit var socket: DatagramSocket
     private lateinit var nodeThread: Thread
     private lateinit var listeningThread: Thread
@@ -18,6 +18,7 @@ class Node(private val udpPort: Int = NodeSettings.defaultUdpPort): BlockchainDe
     private val privateKey = KeyManager().privKey
 
     private var neighbours = mutableListOf<RemoteNode>()
+    private var blacklist = mutableListOf<RemoteNode>()
     private var active = false
 
     var delegate: NodeDelegate? = null
@@ -46,15 +47,12 @@ class Node(private val udpPort: Int = NodeSettings.defaultUdpPort): BlockchainDe
                 e.printStackTrace()
                 continue
             }
+            active = true
             break
         }
-        nodeThread = Thread(Runnable {
-            active = true
-            udpListen()
 
-            println("Running OC node on ${socket.localAddress}:${socket.localPort}")
-        }, "nodeThread")
-        nodeThread.start()
+        udpListen()
+        println("Running OC node on ${socket.localAddress}:${socket.localPort}")
     }
 
     fun shutDown() {
@@ -80,14 +78,21 @@ class Node(private val udpPort: Int = NodeSettings.defaultUdpPort): BlockchainDe
             e.printStackTrace()
         }
 
-        process(packet)
+        dispatch(packet)
     }
 
-    private fun process(packet: DatagramPacket) {
-        // Verifies the given packet
-        // Defines the packet type and decides how to treat it.
+    private fun dispatch(packet: DatagramPacket) {
+
+        // TODO: Add packet signature verification.
+
         val data = packet.data.sliceArray(0..(packet.length - 1))
         val remoteNode = RemoteNode(packet.address, packet.port)
+
+        // Tests the Node.
+        if (remoteNode in blacklist) return
+        if (remoteNode !in neighbours) neighbours.add(remoteNode)
+
+        // Defines the packet type and decides how to treat it.
         when (data[0]) {
             PingMessage.prefix      -> sendTo(PongMessage(PingMessage.unpack(data).nonce).pack(), remoteNode)
             PongMessage.prefix      -> print("\nReceived message of type Pong")
