@@ -1,8 +1,7 @@
 package network.message
 
-class PongMessage(val pingNonce: ByteArray) : DefaultMessage {
-    override val prefix: Byte = 0x02
-    override val length = 8
+class PongMessage(val pingNonce: ByteArray) : Packable {
+    val length = 8
 
     override fun pack(): ByteArray {
         val buffer = ByteArray(1)
@@ -10,9 +9,11 @@ class PongMessage(val pingNonce: ByteArray) : DefaultMessage {
         return buffer + pingNonce
     }
 
-    companion object {
+    companion object : MessageUnpacker<PongMessage>, MessageConstantsHolder {
+        override val prefix: Byte = 0x02
+
         @JvmStatic
-        fun unpack(data: ByteArray): PongMessage {
+        override fun unpack(data: ByteArray): PongMessage {
             return PongMessage(data)
         }
     }

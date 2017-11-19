@@ -1,7 +1,7 @@
 package network
 
-import blockchain.db.models.Block
-import blockchain.db.models.Transaction
+import blockchain.models.Block
+import blockchain.models.Transaction
 
 interface NodeDelegate {
     fun newBlockReceived(block: Block)

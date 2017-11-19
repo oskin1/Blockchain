@@ -2,20 +2,18 @@ package network
 
 import blockchain.BlockchainDelegate
 import crypto.KeyManager
-import network.message.PingMessage
-import network.message.PongMessage
-import network.message.VersionMessage
 import java.io.IOException
 import java.net.*
 
-import blockchain.db.models.Block
-import blockchain.db.models.Transaction
+import blockchain.models.Block
+import blockchain.models.Transaction
+import network.message.*
 
 class Node(private val udpPort: Int = NodeSettings.defaultUdpPort): BlockchainDelegate {
     private lateinit var socket: DatagramSocket
     private lateinit var nodeThread: Thread
     private lateinit var listeningThread: Thread
-    private lateinit var sendingThread: Thread
+    private lateinit var broadcastingThread: Thread
 
     private val privateKey = KeyManager().privKey
 
@@ -25,11 +23,11 @@ class Node(private val udpPort: Int = NodeSettings.defaultUdpPort): BlockchainDe
     var delegate: NodeDelegate? = null
 
     override fun newBlockMined(block: Block) {
-        println("Node has been notified of the new Block")
+        broadcast(BlockMessage(block).pack())
     }
 
     override fun newTransactionCreated(transaction: Transaction) {
-        println("Node has been notified of the new TXN")
+        broadcast(TxnMessage(transaction).pack())
     }
 
     override fun blockDenied(block: Block) {
@@ -41,11 +39,14 @@ class Node(private val udpPort: Int = NodeSettings.defaultUdpPort): BlockchainDe
     }
 
     fun startup() {
-        try {
-            socket = DatagramSocket(udpPort)
-        } catch (e: SocketException) {
-            e.printStackTrace()
-            return
+        for (port in NodeSettings.defaultPortList) {
+            try {
+                socket = DatagramSocket(port)
+            } catch (e: SocketException) {
+                e.printStackTrace()
+                continue
+            }
+            break
         }
         nodeThread = Thread(Runnable {
             active = true
@@ -87,26 +88,35 @@ class Node(private val udpPort: Int = NodeSettings.defaultUdpPort): BlockchainDe
         // Defines the packet type and decides how to treat it.
         val data = packet.data.sliceArray(0..(packet.length - 1))
         val remoteNode = RemoteNode(packet.address, packet.port)
-        when (data[0].toInt()) {
-            1 -> sendTo(PongMessage(PingMessage.unpack(data).nonce).pack(), remoteNode)  // Ping -> Sending Pong
-            2 -> print("\nReceived message of type Pong")
-            3 -> if (VersionMessage.unpack(data).recvAddress == socket.localAddress) {
+        when (data[0]) {
+            PingMessage.prefix      -> sendTo(PongMessage(PingMessage.unpack(data).nonce).pack(), remoteNode)
+            PongMessage.prefix      -> print("\nReceived message of type Pong")
+            VersionMessage.prefix   -> if (VersionMessage.unpack(data).recvAddress == socket.localAddress) {
                 sendTo(VersionMessage(NodeSettings.protocolVersion, packet.address,
-                        socket.localAddress, System.currentTimeMillis()).pack(), remoteNode)
-            }
+                        socket.localAddress, System.currentTimeMillis()).pack(), remoteNode) }
+            BlockMessage.prefix     -> delegate?.newBlockReceived(BlockMessage.unpack(data).block)
+            TxnMessage.prefix       -> delegate?.newTransactionReceived(TxnMessage.unpack(data).txn)
         }
     }
 
-    fun sendTo(data: ByteArray, remoteNode: RemoteNode) {
-        sendingThread = Thread(Runnable {
-            val packet = DatagramPacket(data, data.size, remoteNode.ipAddress, remoteNode.udpPort)
-            try {
-                socket.send(packet)
-            } catch (e: IOException) {
-                e.printStackTrace()
+    private fun broadcast(data: ByteArray) {
+        println("Broadcasting to ${neighbours.size} nodes...")
+        broadcastingThread = Thread(Runnable {
+            for (node in neighbours) {
+                sendTo(data, node)
+                println("Broadcasting to ${node.ipAddress}:${node.udpPort}")
             }
-        }, "sendingThread")
-        sendingThread.start()
+        }, "broadcastingThread")
+        broadcastingThread.start()
+    }
+
+    fun sendTo(data: ByteArray, remoteNode: RemoteNode) {
+        val packet = DatagramPacket(data, data.size, remoteNode.ipAddress, remoteNode.udpPort)
+        try {
+            socket.send(packet)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
     }
 
     private fun wrapPacket() {

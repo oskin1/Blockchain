@@ -1,7 +1,7 @@
 package blockchain
 
-import blockchain.db.models.Block
-import blockchain.db.models.Transaction
+import blockchain.models.Block
+import blockchain.models.Transaction
 
 interface BlockchainDelegate {
     fun newBlockMined(block: Block)

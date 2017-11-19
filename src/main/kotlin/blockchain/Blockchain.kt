@@ -2,13 +2,12 @@ package blockchain
 
 import network.NodeDelegate
 import utils.HASH.sha256
-import blockchain.db.models.Block
-import blockchain.db.models.Transaction
-import blockchain.db.pultusORM
+import blockchain.models.Block
+import blockchain.models.Transaction
 
 class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
     private val version = 1  // Version of the BC
-    private var currentTransactions = mutableListOf<Transaction>()  // Txn Pool
+    private var mempool = mutableListOf<Transaction>()  // Txn Pool
     private var chain = mutableListOf<Block>()
 
     private var difficulty = 3  // POW difficulty level
@@ -41,11 +40,11 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
                 timestamp = System.currentTimeMillis(),
                 nonce = 0,  // Initial nonce
                 prevBlockHash = prevBlockHash,
-                merkleRootHash = merkle(prepareTrxsHashList(currentTransactions))
+                merkleRootHash = merkle(prepareTrxsHashList(mempool))
         )
 
-        block.transactions = currentTransactions.toList()
-        block.transactionsCount = currentTransactions.size
+        block.transactions = mempool.toList()
+        block.transactionsCount = mempool.size
 
         miningThread = Thread(Runnable {
             // Increment nonce until the valid hash found
@@ -62,29 +61,11 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
         TODO("Not implemented")
     }
 
-    fun createGenesisBlock() {
-        // Temporary
-        val block = Block(
-                version = version,
-                height = chain.size + 1,
-                timestamp = System.currentTimeMillis(),
-                nonce = 0,  // Initial nonce
-                prevBlockHash = "100",
-                merkleRootHash = merkle(prepareTrxsHashList(currentTransactions))
-        )
-
-        block.transactions = currentTransactions.toList()
-        block.transactionsCount = currentTransactions.size
-
-        while (!validNonce(block)) block.nonce++
-        commitBlock(block)
-    }
-
     fun commitBlock(block: Block): Boolean {
         // Commits the given Block to the Blockchain.
         if (validChain(chain) && validBlock(block)) {
 
-            currentTransactions.clear()
+            mempool.clear()
             chain.add(block)
 
             // Save Block to db.
@@ -102,9 +83,11 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
                        timestamp: Long = System.currentTimeMillis()): Int {
         // Creates a new transaction to go into the next mined Block.
         val tx = Transaction(sender, recipient, amount, timestamp)
-        currentTransactions.add(tx)
+        mempool.add(tx)
 
-        println("Added tx: ${tx.sender} -> ${tx.recipient}: ${tx.amount}")
+        tx.save()
+
+        println("Adding tx: \n$tx")
         delegate?.newTransactionCreated(tx)
 
         return getLastBlock().height + 1
@@ -199,6 +182,24 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
             currentIndex++
         }
         return true
+    }
+
+    fun createGenesisBlock() {
+        // Temporary
+        val block = Block(
+                version = version,
+                height = chain.size + 1,
+                timestamp = System.currentTimeMillis(),
+                nonce = 0,  // Initial nonce
+                prevBlockHash = "100",
+                merkleRootHash = merkle(prepareTrxsHashList(mempool))
+        )
+
+        block.transactions = mempool.toList()
+        block.transactionsCount = mempool.size
+
+        while (!validNonce(block)) block.nonce++
+        commitBlock(block)
     }
 
 }

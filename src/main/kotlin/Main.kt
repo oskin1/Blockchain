@@ -1,6 +1,8 @@
 import blockchain.Blockchain
+import blockchain.models.Block
 import client.Client
 import network.Node
+import network.message.BlockMessage
 import network.message.PingMessage
 import network.message.VersionMessage
 import utils.toHexString
@@ -9,10 +11,21 @@ import java.nio.charset.Charset
 
 fun main(args: Array<String>) {
 
-    val client = Client()
+    val bl = Block(1, 1, 1234567, 19972930, "o0qe9iww9", "uw9wq92U0iw")
+    val bm = BlockMessage(bl)
+    val bmPacked = bm.pack()
+    val bmUnpacked = BlockMessage.unpack(bmPacked)
 
-    client.sendCoinsTo(1002, "ivan")
-    client.mine()
+    val msgEq = bmUnpacked == bm
+    val blEq = bmUnpacked.block == bl
+
+    println(bmUnpacked.block)
+    println(bl)
+
+//    val client = Client()
+//
+//    client.sendCoinsTo(1002, "ivan")
+//    client.mine()
 
         // Blockchain test.
 

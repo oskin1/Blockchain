@@ -2,9 +2,8 @@ package network.message
 
 import java.util.*
 
-class PingMessage : DefaultMessage {
-    override val prefix: Byte = 0x01
-    override val length = 8
+class PingMessage : Packable {
+    val length = 8
 
     var nonce = ByteArray(7)
 
@@ -18,9 +17,11 @@ class PingMessage : DefaultMessage {
         return buffer + nonce
     }
 
-    companion object {
+    companion object : MessageUnpacker<PingMessage>, MessageConstantsHolder {
+        override val prefix: Byte = 0x01
+
         @JvmStatic
-        fun unpack(data: ByteArray): PingMessage {
+        override fun unpack(data: ByteArray): PingMessage {
             val instance = PingMessage()
             instance.nonce = data
             return instance
