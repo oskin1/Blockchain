@@ -1,4 +1,4 @@
-package network
+package network.models
 
 import java.net.InetAddress
 

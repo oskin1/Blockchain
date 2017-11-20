@@ -1,4 +1,4 @@
-package network.message
+package network.models.messages
 
 class PongMessage(val pingNonce: ByteArray) : Packable {
     val length = 8

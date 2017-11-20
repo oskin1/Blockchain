@@ -1,4 +1,4 @@
-package network.message
+package network.models.messages
 
 import java.util.*
 

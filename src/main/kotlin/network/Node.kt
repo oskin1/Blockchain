@@ -7,11 +7,11 @@ import java.net.*
 
 import blockchain.models.Block
 import blockchain.models.Transaction
-import network.message.*
+import network.models.RemoteNode
+import network.models.messages.*
 
 class Node(private val udpPort: Int = NodeSettings.defaultUdpPort) : BlockchainDelegate {
     private lateinit var socket: DatagramSocket
-    private lateinit var nodeThread: Thread
     private lateinit var listeningThread: Thread
     private lateinit var broadcastingThread: Thread
 
@@ -95,7 +95,7 @@ class Node(private val udpPort: Int = NodeSettings.defaultUdpPort) : BlockchainD
         // Defines the packet type and decides how to treat it.
         when (data[0]) {
             PingMessage.prefix      -> sendTo(PongMessage(PingMessage.unpack(data).nonce).pack(), remoteNode)
-            PongMessage.prefix      -> print("\nReceived message of type Pong")
+            PongMessage.prefix      -> print("\nReceived messages of type Pong")
             VersionMessage.prefix   -> if (VersionMessage.unpack(data).recvAddress == socket.localAddress) {
                 sendTo(VersionMessage(NodeSettings.protocolVersion, packet.address,
                         socket.localAddress, System.currentTimeMillis()).pack(), remoteNode) }

@@ -5,7 +5,7 @@ import utils.HASH.sha256
 import blockchain.models.Block
 import blockchain.models.Transaction
 
-class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
+class Blockchain : NodeDelegate {
     private val version = 1  // Version of the BC
     private var mempool = mutableListOf<Transaction>()  // Txn Pool
     private var chain = mutableListOf<Block>()
@@ -16,13 +16,8 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
 
     var delegate: BlockchainDelegate? = null
 
-    init {
-        // Creates genesis block.
-        createGenesisBlock()
-    }
-
     override fun newTransactionReceived(transaction: Transaction) {
-        TODO("not implemented") // Verify received Txn.
+        if (validTransaction(transaction)) mempool.add(transaction)
     }
 
     override fun newBlockReceived(block: Block) {
@@ -30,9 +25,6 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
     }
 
     fun createBlock(prevBlockHash: String = hash(chain.last()), commit: Boolean = true) {
-        // Add coinbase txn with miner's reward.
-        addTransaction("coinbase", addr, 12)
-
         // Creates a new Block.
         val block = Block(
                 version = version,
@@ -40,7 +32,7 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
                 timestamp = System.currentTimeMillis(),
                 nonce = 0,  // Initial nonce
                 prevBlockHash = prevBlockHash,
-                merkleRootHash = merkle(prepareTrxsHashList(mempool))
+                merkleRootHash = merkle(prepareTxnPool(mempool))
         )
 
         block.transactions = mempool.toList()
@@ -57,7 +49,11 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
         miningThread.start()
     }
 
-    private fun setupChain(): List<Block> {
+    private fun setupChain() {
+        TODO("Not implemented")
+    }
+
+    private fun setupMempool() {
         TODO("Not implemented")
     }
 
@@ -68,13 +64,12 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
             mempool.clear()
             chain.add(block)
 
-            // Save Block to db.
+            // Save the Block to storage.
 
             print("\nCommitting new block:\n-> $block\n")
 
             return true
         }
-
         return false
     }
 
@@ -85,7 +80,7 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
         val tx = Transaction(sender, recipient, amount, timestamp)
         mempool.add(tx)
 
-        tx.save()
+        // Save the Block to storage.
 
         println("Adding tx: \n$tx")
         delegate?.newTransactionCreated(tx)
@@ -95,7 +90,7 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
 
     fun getLastBlock(): Block = chain.last()
 
-    fun resolveConflicts(chain: List<Block>): Boolean {
+    private fun resolveConflicts(chain: List<Block>): Boolean {
         if (chain.size > this.chain.size && validChain(chain)) {
             this.chain = chain.toMutableList()
             return true
@@ -107,16 +102,16 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
         // Not implemented.
     }
 
-    fun hash(block: Block): String {
+    private fun hash(block: Block): String {
         // Creates the SHA-256 hash of Block header.
         var header = block.version.toString(16) + block.height.toString(16) +
                 block.timestamp.toString(16) + block.nonce.toString(16) + block.prevBlockHash
-        if (block.transactions.isNotEmpty()) header += merkle(prepareTrxsHashList(block.transactions))
+        if (block.transactions.isNotEmpty()) header += merkle(prepareTxnPool(block.transactions))
 
         return sha256(sha256(header))
     }
 
-    fun hash(transaction: Transaction): String {
+    private fun hash(transaction: Transaction): String {
         // Creates the SHA-256 hash of Transaction header.
         val header = transaction.sender +
                 transaction.recipient +
@@ -126,7 +121,7 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
         return sha256(sha256(header))
     }
 
-    fun merkle(hashList: List<String>): String {
+    private fun merkle(hashList: List<String>): String {
         if (hashList.isEmpty()) return ""
         if (hashList.size == 1) return hashList[0]
         val newHashList = mutableListOf<String>()
@@ -140,29 +135,29 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
         return sha256(sha256(a.reversed() + b.reversed())).reversed()
     }
 
-    private fun prepareTrxsHashList(transactions: List<Transaction>): List<String> {
+    private fun prepareTxnPool(transactions: List<Transaction>): List<String> {
         // Returns the list of Transactions hashes.
         return transactions.map { hash(it) }
     }
 
-    fun validNonce(block: Block): Boolean {
+    private fun validNonce(block: Block): Boolean {
         // Validates the given nonce.
         return hash(block).slice(0..(difficulty - 1)) == "0".repeat(difficulty)
     }
 
-    fun validTransaction(): Boolean {
+    private fun validTransaction(txn: Transaction): Boolean {
         // Not implemented.
         return true
     }
 
-    fun validBlock(block: Block): Boolean {
+    private fun validBlock(block: Block): Boolean {
         // Validates the given block.
         val prevBlock: Block? = if (block.height > 1) chain[block.height - 2] else null
         if (prevBlock != null) {
             if ((block.height - prevBlock.height) != 1) return false
             if (block.version < prevBlock.version) return false
             if (block.prevBlockHash != hash(prevBlock)) return false
-            if (block.merkleRootHash != merkle(prepareTrxsHashList(block.transactions))) return false
+            if (block.merkleRootHash != merkle(prepareTxnPool(block.transactions))) return false
             if (!validNonce(block)) return false
         } else {
             if (chain.isNotEmpty() && hash(block) != hash(chain[0])) return false
@@ -170,7 +165,7 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
         return true
     }
 
-    fun validChain(chain: List<Block>): Boolean {
+    private fun validChain(chain: List<Block>): Boolean {
         // Validates the given chain.
         var currentIndex = 1
 
@@ -192,7 +187,7 @@ class Blockchain(val addr: String, val sig: String? = null) : NodeDelegate {
                 timestamp = System.currentTimeMillis(),
                 nonce = 0,  // Initial nonce
                 prevBlockHash = "100",
-                merkleRootHash = merkle(prepareTrxsHashList(mempool))
+                merkleRootHash = merkle(prepareTxnPool(mempool))
         )
 
         block.transactions = mempool.toList()

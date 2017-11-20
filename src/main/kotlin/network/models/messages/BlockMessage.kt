@@ -1,4 +1,4 @@
-package network.message
+package network.models.messages
 
 import blockchain.models.Block
 import java.nio.ByteBuffer
