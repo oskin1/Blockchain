@@ -32,7 +32,7 @@ class Node(private val udpPort: Int = NodeSettings.defaultUdpPort) : BlockchainD
     }
 
     override fun blockDenied(block: Block) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implementeded") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun transactionDenied(transaction: Transaction) {
