@@ -3,7 +3,7 @@ package blockchain
 import network.NodeDelegate
 import utils.HASH.sha256
 import blockchain.models.Block
-import blockchain.models.Transaction
+import blockchain.models.Transaction.Transaction
 
 class Blockchain : NodeDelegate {
     private val version = 1  // Version of the BC

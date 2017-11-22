@@ -6,7 +6,7 @@ import java.io.IOException
 import java.net.*
 
 import blockchain.models.Block
-import blockchain.models.Transaction
+import blockchain.models.Transaction.Transaction
 import network.models.RemoteNode
 import network.models.messages.*
 

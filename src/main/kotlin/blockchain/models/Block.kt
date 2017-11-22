@@ -1,5 +1,6 @@
 package blockchain.models
 
+import blockchain.models.Transaction.Transaction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 

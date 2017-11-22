@@ -1,5 +1,7 @@
-package blockchain.models
+package blockchain.models.Transaction
 
+import blockchain.models.JsonLoader
+import blockchain.models.JsonSerializable
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 

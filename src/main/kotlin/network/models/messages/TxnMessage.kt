@@ -1,6 +1,6 @@
 package network.models.messages
 
-import blockchain.models.Transaction
+import blockchain.models.Transaction.Transaction
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 

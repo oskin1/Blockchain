@@ -31,6 +31,7 @@ object HASH {
     private val MD5 = "MD5"
     private val SHA_1 = "SHA-1"
     private val SHA_256 = "SHA-256"
+    private val SHA_512 = "SHA-512"
     private val DIGITS_LOWER = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f')
     private val DIGITS_UPPER = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
 
@@ -67,6 +68,18 @@ object HASH {
     }
 
     fun sha256Bytes(data: ByteArray): ByteArray {
+        return getDigest(SHA_256).digest(data)
+    }
+
+    fun sha512(data: ByteArray): String {
+        return String(encodeHex(sha256Bytes(data)))
+    }
+
+    fun sha512(text: String): String {
+        return String(encodeHex(sha256Bytes(Helper.getRawBytes(text))))
+    }
+
+    fun sha512Bytes(data: ByteArray): ByteArray {
         return getDigest(SHA_256).digest(data)
     }
 
