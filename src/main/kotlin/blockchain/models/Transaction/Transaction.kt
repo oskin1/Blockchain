@@ -7,9 +7,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 
 class Transaction(
         val sender: String,
-        val recipient: String,
         val amount: Long,
-        val timestamp: Long
+        val timestamp: Long,
+        val input : Array<Input> = emptyArray(),
+        val output : Array<Output> = emptyArray()
 ) : JsonSerializable {
 
     companion object : JsonLoader<Transaction> {
@@ -19,6 +20,6 @@ class Transaction(
         }
     }
 
-    override fun toString(): String = "<Txn sdr: $sender, rec: $recipient, am: $amount>"
+    override fun toString(): String = "<Txn sdr: $sender, am: $amount>"
 
 }

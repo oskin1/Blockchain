@@ -1,13 +1,16 @@
 import blockchain.models.Block
+import blockchain.models.Transaction.Input
+import blockchain.models.Transaction.Output
 import client.Client
 import network.models.messages.BlockMessage
+import utils.HASH.sha256
 
 fun main(args: Array<String>) {
 
-    val client = Client()
+    //val client = Client()
 
-    client.sendCoinsTo(1002, "ivan")
-    client.mine()
+    //client.sendCoinsTo(1002, "ivan")
+    //client.mine()
 
         // Blockchain test.
 
@@ -35,6 +38,14 @@ fun main(args: Array<String>) {
 
 //    val myNode = Node()
 
+
+    val ramonPK = "ramon"
+    val iljaPK = "ilja"
+
+    val inp = Input("0",0,"0")
+    val out = Output(123, sha256(sha256(iljaPK)))
+    println(inp)
+    println(out)
 
         // Version Packet packing/unpacking test.
 

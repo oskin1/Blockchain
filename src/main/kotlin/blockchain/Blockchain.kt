@@ -77,7 +77,7 @@ class Blockchain : NodeDelegate {
     fun addTransaction(sender: String, recipient: String, amount: Long,
                        timestamp: Long = System.currentTimeMillis()): Int {
         // Creates a new transaction to go into the next mined Block.
-        val tx = Transaction(sender, recipient, amount, timestamp)
+        val tx = Transaction(sender, amount, timestamp)
         mempool.add(tx)
 
         // Save the Block to storage.
@@ -114,7 +114,6 @@ class Blockchain : NodeDelegate {
     private fun hash(transaction: Transaction): String {
         // Creates the SHA-256 hash of Transaction header.
         val header = transaction.sender +
-                transaction.recipient +
                 transaction.amount.toString(16) +
                 transaction.timestamp.toString(16)
 
