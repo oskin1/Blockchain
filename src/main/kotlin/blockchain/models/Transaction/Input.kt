@@ -5,9 +5,10 @@ import blockchain.models.JsonSerializable
 class Input(
         val prevTranscationHash : String,
         val prevOutputIndex : Short,
-        val unlock : String
+        val publKey : String,
+        val transactionOwnerSign : Byte
 ) : JsonSerializable
 {
-    override fun toString(): String = "Input { prevTranscationHash = $prevTranscationHash , prevOutputIndex = $prevOutputIndex, unlock = $unlock}"
+    override fun toString(): String = "Input { prevTranscationHash = $prevTranscationHash , prevOutputIndex = $prevOutputIndex}"
 }
 

@@ -1,8 +1,9 @@
 package crypto
 
 object KeySettings {
-    const val algotithmSpec = "RSA"
-    const val privKeyFileName = "id_rsa"
-    const val pubKeyFileName = "id_rsa.pub"
-    const val keysDirectoryPath = "AppData/RSA/"
+    const val algotithmSpec = "EC"
+    const val ParameterSpec = "secp256r1"
+    const val privKeyFileName = "prKey"
+    const val pubKeyFileName = "pbKey"
+    const val keysDirectoryPath = "Keys/"
 }

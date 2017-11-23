@@ -1,20 +1,27 @@
 package crypto
 
-import java.security.Key
-import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.io.File
+import java.security.*
+import java.security.spec.ECGenParameterSpec
+import java.security.PrivateKey
+import java.security.PublicKey
+import java.security.KeyFactory
+import java.security.spec.X509EncodedKeySpec
+import java.security.spec.PKCS8EncodedKeySpec
+
+
 
 
 class KeyManager {
-    var privKey: Key private set
-    var pubKey: Key private set
-
+    var privKey: PrivateKey private set
+    var pubKey: PublicKey private set
     init {
         try {
-            privKey = tryReadFromFile(KeySettings.privKeyFileName)
-            pubKey = tryReadFromFile(KeySettings.pubKeyFileName)
+            println("Reading data from files")
+            privKey = getPrivKeyFromFile()
+            pubKey = getPubKeyFromFile()
         } catch (t: Throwable) {
+            println("failed")
             val keyPair = generateKeyPair()
 
             privKey = keyPair.private
@@ -27,8 +34,12 @@ class KeyManager {
 
     private fun generateKeyPair(): KeyPair {
         val keyGen = KeyPairGenerator.getInstance(KeySettings.algotithmSpec)
+        val kpgparams = ECGenParameterSpec(KeySettings.ParameterSpec);
+        keyGen.initialize(kpgparams);
 
-        return keyGen.genKeyPair()
+        val pair = keyGen.generateKeyPair();
+
+        return pair
     }
 
     private fun saveToFile(key: Key, keyFileName: String) {
@@ -38,14 +49,36 @@ class KeyManager {
             throw IllegalStateException("Failed to create dirs up to ${file.parent}")
         }
 
-        file.writeBytes(key.encoded)
+        var byteArr = key.encoded
+
+        file.writeBytes(byteArr)
     }
 
-    private fun tryReadFromFile(keyFileName: String): Key {
-        val keyDeserializer = DefaultKeyDeserializer()
+    private fun tryReadFromFile(keyFileName: String): ByteArray {
         val file = File(keyFileName)
-        val bytes = file.readBytes()
+        return  file.readBytes()
+    }
 
-        return keyDeserializer.deserialize(bytes)
+    private fun getPrivKeyFromFile() : PrivateKey{
+
+        val buffer = tryReadFromFile(KeySettings.keysDirectoryPath + KeySettings.privKeyFileName)
+
+        val formatted_private = PKCS8EncodedKeySpec(buffer)
+
+        val kf = KeyFactory.getInstance(KeySettings.algotithmSpec)
+
+        return kf.generatePrivate(formatted_private)
+    }
+
+    private fun getPubKeyFromFile() : PublicKey{
+
+        val buffer = tryReadFromFile(KeySettings.keysDirectoryPath + KeySettings.pubKeyFileName)
+
+        val formatted_public = X509EncodedKeySpec(buffer)
+
+        val kf = KeyFactory.getInstance(KeySettings.algotithmSpec)
+
+        return kf.generatePublic(formatted_public)
+
     }
 }

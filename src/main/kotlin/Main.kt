@@ -4,6 +4,21 @@ import blockchain.models.Transaction.Output
 import client.Client
 import network.models.messages.BlockMessage
 import utils.HASH.sha256
+import java.security.KeyPairGenerator
+import java.security.Signature
+import java.security.spec.ECGenParameterSpec
+import com.oracle.util.Checksums.update
+import com.fasterxml.jackson.databind.AnnotationIntrospector.pair
+import java.math.BigInteger
+import java.nio.charset.Charset
+import com.oracle.util.Checksums.update
+import com.fasterxml.jackson.databind.AnnotationIntrospector.pair
+import crypto.KeyManager
+import crypto.Sign
+import java.security.PrivateKey
+import java.security.PublicKey
+import java.util.*
+
 
 fun main(args: Array<String>) {
 
@@ -39,13 +54,30 @@ fun main(args: Array<String>) {
 //    val myNode = Node()
 
 
+    val text = "TestMessage"
+    val textWrong = "TestMessage"
+
+    val a = KeyManager()
+    //println(a.pubKey as PublicKey)
+    //val sign = Sign.getSign(a.privKey,text.toByteArray(Charset.forName("UTF-8")))
+//    val builder = StringBuilder()
+//    for(b in sign){
+//        builder.append(b)
+//    }
+//    println(builder.toString())
+    //println(Sign.verifySign(textWrong.toByteArray(Charset.forName("UTF-8")),k,a.pubKey))
+//    if(){
+//        println("valid")
+//    }else{
+//        println("invalid")
+//    }
     val ramonPK = "ramon"
     val iljaPK = "ilja"
 
-    val inp = Input("0",0,"0")
-    val out = Output(123, sha256(sha256(iljaPK)))
-    println(inp)
-    println(out)
+//    val inp = Input("0",0,"0")
+//    val out = Output(123, sha256(sha256(iljaPK)))
+//    println(inp)
+//    println(out)
 
         // Version Packet packing/unpacking test.
 
